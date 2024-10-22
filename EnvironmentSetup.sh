@@ -1,7 +1,19 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    EnvironmentSetup.sh                                :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: cvalim-d <cvalim-d@student.42lisboa.com    +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2024/10/22 13:47:40 by cvalim-d          #+#    #+#              #
+#    Updated: 2024/10/22 14:42:55 by cvalim-d         ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
 #!/bin/bash
 
-LANGUAGE=""
-VSCODE_DIR="$HOME/Documents/.vscode"
+LANGUAGE="EN"
+VSCODE_DIR="~/.var/app/com.visualstudio.code/config/Code/User"
 
 # Function to display a header for the setup script
 show_header() {
@@ -108,14 +120,17 @@ choose_configurations() {
 # Function to configure the MAIL environment variable based on user input
 configure_mail_variable() {
 	local user_email
+
 	if [ "$LANGUAGE" == "EN" ]; then
 		read -p "Enter your 42 email (e.g., user@42student.lisboa.com): " user_email
 	else
 		read -p "Digite seu email da 42 (e.g., user@42student.lisboa.com): " user_email
 	fi
 
-	# Set the MAIL environment variable directly without validation
-	export MAIL="$user_email"
+	if ! grep -q "export MAIL=" ~/.zshrc; then
+		echo "export MAIL=\"$user_email\"" >>~/.zshrc
+	fi
+
 	show_message "MAIL set to: $MAIL" "MAIL configurado como: $MAIL"
 	echo "export MAIL=\"$user_email\"" >>~/.zshrc
 }
@@ -142,14 +157,10 @@ configure_zsh() {
 		colorize            # Colors the output of commands
 	)
 
-	# Load zsh-syntax-highlighting if the file exists
-	if [ -f "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh" ]; then
-		source "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
-	fi
-
 	# Define aliases
 	alias norm='norminette -R CheckForbiddenSourceHeaderflag'
 	alias comp='cc -Wall -Wextra -Werror'
+	alias glf='git ls-files'
 
 	# Reload Zsh configuration
 	if [ -f "$HOME/.zshrc" ]; then
@@ -185,32 +196,90 @@ set number
 set tabstop=4
 set shiftwidth=4
 set expandtab
+
+" Macros
+"
+nnoremap <F2> :Stdheader<CR>
+nnoremap <F3> :Format<CR>
+nnoremap <F4> :!norminette %<.c<CR>
+nnoremap <F5> :!cc -Wall -Wextra -Werror % -o %<.out && ./%<.out<CR>
+
 EOF
 }
 
 configure_vscode() {
-	# Check if the VSCode directory exists
-	if [ ! -d "$VSCODE_DIR" ]; then
-		mkdir -p "$VSCODE_DIR"
-		show_message "Created VSCode directory at $VSCODE_DIR" "Diretório do VSCode criado em $VSCODE_DIR"
-	fi
-
 	show_message "Configuring VSCode..." "Configurando o VSCode..."
 
 	cat <<EOF >"$VSCODE_DIR/settings.json"
 {
-    "editor.formatOnSave": true,
-    "editor.tabSize": 4,
-    "editor.insertSpaces": true,
-    "files.autoSave": "onWindowChange"
-}
+	"breadcrumbs.enabled": false,
+	"editor.tabSize": 4,
+	"editor.insertSpaces": false,
+	"editor.renderWhitespace": "all",
+	"files.trimTrailingWhitespace": true,
+	"files.autoSave": "afterDelay",
+	"terminal.integrated.env.linux": {
+	  "PATH": "$HOME/bin:$HOME/.local/bin:/usr/local/bin:/usr/bin:$PATH"
+  },
+	"terminal.integrated.env.osx": {
+	  "PATH": "/usr/bin:$PATH"  },
+	"editor.formatOnSave": true,
+	"[c]": {
+	  "editor.defaultFormatter": "keyhr.42-c-format"
+	  },
+	"terminal.integrated.defaultProfile.linux": "zsh",
+	"42header.username": "$USER",
+	"42header.email": "$MAIL",
+  "terminal.integrated.profiles.linux": {
+	  "bash": {
+		  "path": "bash",
+		  "icon": "terminal-bash"
+	  },
+	  "zsh": {
+		  "path": "/home/$USER/zsh/bin/zsh"
+	  },
+	  "fish": {
+		  "path": "fish"
+	  },
+	  "tmux": {
+		  "path": "tmux",
+		  "icon": "terminal-tmux"
+	  },
+	  "pwsh": {
+		  "path": "pwsh",
+		  "icon": "terminal-powershell"
+	  },
+	  "sh": {
+		  "path": "/bin/sh"
+	  }
+  },
+  "code-runner.executorMap": {
+		  "cpp": "/usr/bin/g++ -o $fileNameWithoutExt $fileName && ./$fileNameWithoutExt",
+		  "c": "/usr/bin/cc -o $fileNameWithoutExt $fileName && ./$fileNameWithoutExt"
+	  },
+	  "code-runner.runInTerminal": true,
+	  "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+	  "C_Cpp.default.intelliSenseMode": "gcc-x64",
+	  "C_Cpp.default.compilerPath": "/usr/bin/g++",
+	  "C_Cpp.default.compileCommands": "cc",
+	  "C_Cpp.default.compilerArgs": [
+		  "-Wall -Wextra -Werror"
+	  ],
+	  "cmake.showOptionsMovedNotification": false,
+	  "[cpp]": {
+		  "editor.defaultFormatter": "keyhr.42-c-format"
+	  }
+  }
+
 EOF
 }
 
 reset_configurations() {
 	show_message "Resetting all configurations..." "Resetando todas as configurações..."
 
-	rm -f ~/.zshrc ~/.vimrc "$VSCODE_DIR/settings.json"
+	[ -f ~/.zshrc ] && rm ~/.zshrc
+	[ -f ~/.vimrc ] && rm ~/.vimrc
+	[ -d "$VSCODE_DIR" ] && rm -f "$VSCODE_DIR/settings.json"
 	show_message "All configurations have been reset." "Todas as configurações foram resetadas."
 }
 
