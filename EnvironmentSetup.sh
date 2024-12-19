@@ -1,15 +1,3 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    EnvironmentSetup.sh                                :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: cvalim-d <cvalim-d@student.42lisboa.com    +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2024/10/22 13:47:40 by cvalim-d          #+#    #+#              #
-#    Updated: 2024/10/22 14:42:55 by cvalim-d         ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
-
 #!/bin/bash
 
 LANGUAGE="EN"
@@ -70,7 +58,7 @@ choose_configurations() {
 	while true; do
 		show_header # Show header at the beginning of this loop
 		show_message "Choose the configurations to apply or to reset the configurations:" "Escolha as configurações a serem aplicadas ou resetar os arquivos de configurações:"
-		show_message "1) All configs (Vim, VSCode and Terminal (Zsh))" "1) Todas as configurações (Recomendado)"
+		show_message "1) All configs (Vim, VSCode and Terminal (Zsh))" "1) Todas as configurações (Vim, VSCode e Terminal (Zsh))"
 		show_message "2) Vim configs" "2) Configurações do Vim"
 		show_message "3) Terminal (Zsh) configs" "3) Configurações do Terminal (Zsh)"
 		show_message "4) VSCode configs" "4) Configurações do VSCode"
@@ -81,12 +69,12 @@ choose_configurations() {
 
 		case $config_choice in
 		1)
-			configure_vim
-			clear # Clear after configuring Vim
-			configure_zsh
-			clear # Clear after configuring Zsh
 			configure_mail_variable
 			clear # Clear after configuring MAIL variable
+			configure_zsh
+			clear # Clear after configuring Zsh
+			configure_vim
+			clear # Clear after configuring Vim
 			configure_vscode
 			clear # Clear after configuring VSCode
 			;;
@@ -136,12 +124,6 @@ configure_mail_variable() {
 }
 
 configure_zsh() {
-	# Check if Zsh is installed
-	if ! command -v zsh &>/dev/null; then
-		show_message "Zsh is not installed. Please install Zsh on your system." "Zsh não está instalado. Por favor, instale o Zsh no seu sistema."
-		return 1
-	fi
-
 	show_message "Configuring Zsh..." "Configurando Zsh..."
 
 	# Configuration of PATH
@@ -153,14 +135,13 @@ configure_zsh() {
 	# Plugins to be loaded (located in $ZSH/plugins/)
 	plugins=(
 		zsh-autosuggestions # Suggests commands based on command history
-		colored-man-pages   # Adds color to man pages for better readability
-		colorize            # Colors the output of commands
 	)
 
 	# Define aliases
 	alias norm='norminette -R CheckForbiddenSourceHeaderflag'
 	alias comp='cc -Wall -Wextra -Werror'
 	alias glf='git ls-files'
+	alias gpush='git add . && git commit -m "$(basename "$PWD")" && git push'
 
 	# Reload Zsh configuration
 	if [ -f "$HOME/.zshrc" ]; then
